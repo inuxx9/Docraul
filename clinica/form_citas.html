@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitud de Cita - Clínica Dental</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+
+    <div class="min-h-screen flex items-center justify-center bg-gray-100 p-4">
+        <div class="max-w-xl w-full bg-white p-8 rounded-lg shadow-xl">
+            <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">🦷 Solicitar Cita Odontológica</h2>
+            <p class="text-center text-gray-500 mb-8">Por favor, rellena tus datos para agendar una cita.</p>
+
+            <form id="citaForm">
+                <div class="space-y-4 mb-6">
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2">1. Datos Personales</h3>
+                    
+                    <div>
+                        <label for="nombre" class="block text-sm font-medium text-gray-700">Nombre Completo</label>
+                        <input type="text" id="nombre" name="nombre" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="Ej: Juan Pérez">
+                    </div>
+
+                    <div>
+                        <label for="email" class="block text-sm font-medium text-gray-700">Correo Electrónico</label>
+                        <input type="email" id="email" name="email" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="ejemplo@correo.com">
+                    </div>
+
+                    <div>
+                        <label for="telefono" class="block text-sm font-medium text-gray-700">Teléfono</label>
+                        <input type="tel" id="telefono" name="telefono" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                               placeholder="Ej: 555-1234567">
+                    </div>
+                </div>
+
+                <div class="space-y-4 mb-8">
+                    <h3 class="text-xl font-semibold text-gray-700 border-b pb-2">2. Detalle de la Cita</h3>
+
+                    <div>
+                        <label for="fecha" class="block text-sm font-medium text-gray-700">Fecha Preferida</label>
+                        <input type="date" id="fecha" name="fecha_solicitud" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label for="hora" class="block text-sm font-medium text-gray-700">Hora Preferida</label>
+                        <input type="time" id="hora" name="hora_solicitud" required
+                               class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                    </div>
+
+                    <div>
+                        <label for="motivo" class="block text-sm font-medium text-gray-700">Motivo de la Visita (Opcional)</label>
+                        <textarea id="motivo" name="motivo" rows="3"
+                                  class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                                  placeholder="Breve descripción del motivo..."></textarea>
+                    </div>
+                </div>
+
+                <div id="statusMessage" class="hidden p-3 mb-4 text-sm text-center rounded-lg" role="alert"></div>
+
+                <div class="text-center">
+                    <button type="submit" id="submitButton"
+                            class="w-full inline-flex justify-center py-3 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out">
+                        Solicitar y Enviar Cita
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const citaForm = document.getElementById('citaForm');
+        const statusMessage = document.getElementById('statusMessage');
+        const submitButton = document.getElementById('submitButton');
+
+        citaForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Deshabilitar botón y mostrar carga
+            submitButton.disabled = true;
+            submitButton.textContent = 'Enviando...';
+            statusMessage.classList.add('hidden');
+
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+
+            fetch('api/solicitar_cita.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    statusMessage.textContent = '✅ ¡Cita solicitada con éxito! La recepcionista la revisará pronto.';
+                    statusMessage.classList.remove('hidden', 'bg-red-100', 'text-red-700');
+                    statusMessage.classList.add('bg-green-100', 'text-green-700');
+                    citaForm.reset();
+                } else {
+                    statusMessage.textContent = '❌ Error: ' + result.message;
+                    statusMessage.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+                    statusMessage.classList.add('bg-red-100', 'text-red-700');
+                }
+            })
+            .catch(error => {
+                console.error('Error de red:', error);
+                statusMessage.textContent = '❌ Error de conexión con el servidor. Intenta de nuevo.';
+                statusMessage.classList.remove('hidden', 'bg-green-100', 'text-green-700');
+                statusMessage.classList.add('bg-red-100', 'text-red-700');
+            })
+            .finally(() => {
+                // Habilitar botón y restaurar texto
+                submitButton.disabled = false;
+                submitButton.textContent = 'Solicitar y Enviar Cita';
+            });
+        });
+    </script>
+</body>
+</html>
